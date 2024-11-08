@@ -1,4 +1,6 @@
 *.jpg
+*.out
+*.png
 coo/
 .idea/
 .vscode/
