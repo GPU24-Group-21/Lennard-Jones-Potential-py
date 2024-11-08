@@ -3,7 +3,8 @@ setup:
 	./setup.sh
 
 run:
-	source ./venv/bin/activate && python ./main.py
+	@chmod +x ./run.sh
+	./run.sh
 
 clean:
 	rm -rf ./coo *.jpg *.out *.png

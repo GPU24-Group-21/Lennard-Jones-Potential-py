@@ -404,6 +404,7 @@ def SingleStep():
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser(description='2D Soft-Disk Simulation(Python Ver.)')
+    parser.add_argument("-q", "--quite", help="Disable print", default=False, action='store_true')
     parser.add_argument("-f", "--file", help="Output step file", default=False, action='store_true')
     parser.add_argument("-g", "--graph", help="Output step graph", default=False, action='store_true')
     args = parser.parse_args()
@@ -482,11 +483,8 @@ if __name__ == '__main__':
 
     time_loop_end = time.time()
     print('Logic Run Time:', time_loop_end - time_loop_start)
-
     columns = ['timestep', 'timeNow', '$\Sigma v$', 'E', '$\sigma E$', 'Ek', '$\sigma Ek$', 'P_1', 'P_2']
     df_systemParams = pd.DataFrame(systemParams, columns=columns)
-
     GraphOutput()
-
     time_end = time.time()
     print('Total Time:', time_end - start)
