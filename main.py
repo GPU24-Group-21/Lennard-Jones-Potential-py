@@ -1,6 +1,8 @@
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
+from dateutil.parser import parser
+
 plt.style.use('seaborn-v0_8-bright')
 import numpy as np
 import os.path
@@ -271,12 +273,11 @@ def AccumProps(icode):
         PropAvg(kinEnergy, stepAvg)
         PropAvg(pressure, stepAvg)
 
-
 # OUTPUT FUNCTIONS:
-def outputMolCoo(x, workdir, n, mark_1, mark_2):
+def outputMolCoo(x, workdir, n, mark_1, mark_2, final):
     filename = (workdir + 'coo/' + str(n) + '.out')
 
-    with open(filename, 'w') as f:
+    with open(filename if not final else 'final.out', 'w') as f:
         # header
         f.write('step: ' + str(n) + '\n')
         f.write('ts: ' + str(timeNow) + '\n')
@@ -298,22 +299,12 @@ def outputMolCoo(x, workdir, n, mark_1, mark_2):
                 f.write(f'o-{n}:' + str(x[n].r[0]) + ',' + str(x[n].r[1]) + '\n')
         f.write('====================')
 
-def plotMolCoo(mol, workdir, n):
-    import matplotlib.pyplot as plt
-
-    Time = timeNow
-    Sigma_v = "{0:.4f}".format(vSum[0] / nMol)
-    E = "{0:.4f}".format(totEnergy.sum1)
-    Sigma_E = "{0:.4f}".format(totEnergy.sum2)
-    Ek = "{0:.4f}".format(kinEnergy.sum1)
-    Sigma_Ek = "{0:.4f}".format(kinEnergy.sum2)
-    P_1 = "{0:.4f}".format(pressure.sum1)
-    P_2 = "{0:.4f}".format(pressure.sum2)
-    TileName = (workdir + 'coo/' + str(n) + '.png')
+def plotMolCoo(mol, workdir, n, final, file=True, graph=False):
+    if not graph and not file and not final:
+        return
 
     x = []
     y = []
-
     for m in range(len(mol)):
         x.append(mol[m].r[0])
         y.append(mol[m].r[1])
@@ -321,24 +312,35 @@ def plotMolCoo(mol, workdir, n):
     mark_1 = int(len(mol) / 2 + len(mol) / 8)
     mark_2 = int(len(mol) / 2 + len(mol) / 8 + 1)
 
+    if file or final:
+        outputMolCoo(mol, workdir, n, mark_1, mark_2, final)
+    if graph or final:
+        import matplotlib.pyplot as plt
+        Time = timeNow
+        Sigma_v = "{0:.4f}".format(vSum[0] / nMol)
+        E = "{0:.4f}".format(totEnergy.sum1)
+        Sigma_E = "{0:.4f}".format(totEnergy.sum2)
+        Ek = "{0:.4f}".format(kinEnergy.sum1)
+        Sigma_Ek = "{0:.4f}".format(kinEnergy.sum2)
+        P_1 = "{0:.4f}".format(pressure.sum1)
+        P_2 = "{0:.4f}".format(pressure.sum2)
+        TileName = (workdir + 'coo/' + str(n) + '.png')
 
-    outputMolCoo(mol, workdir, timeNow, mark_1, mark_2)
+        plt.plot(x, y, 'o', color='blue')
+        plt.plot(x[mark_1], y[mark_1], 'o', color='red')
+        plt.plot(x[mark_2], y[mark_2], 'o', color='cyan')
 
-    plt.plot(x, y, 'o', color='blue')
-    plt.plot(x[mark_1], y[mark_1], 'o', color='red')
-    plt.plot(x[mark_2], y[mark_2], 'o', color='cyan')
+        plt.title('timestep:' + "{0:.4f}".format(Time) + '; ' + \
+                  '$\Sigma v$:' + Sigma_v + '; ' + \
+                  'E:' + E + '; ' + \
+                  '$\sigma E$:' + Sigma_E + ';\n' + \
+                  'Ek:' + Ek + '; ' + \
+                  '$\sigma Ek$:' + Sigma_Ek + '; ' + \
+                  'P.sum1:' + P_1 + '; ' + \
+                  'P.sum2:' + P_2 + '; ', loc='left')
 
-    plt.title('timestep:' + "{0:.4f}".format(Time) + '; ' + \
-              '$\Sigma v$:' + Sigma_v + '; ' + \
-              'E:' + E + '; ' + \
-              '$\sigma E$:' + Sigma_E + ';\n' + \
-              'Ek:' + Ek + '; ' + \
-              '$\sigma Ek$:' + Sigma_Ek + '; ' + \
-              'P.sum1:' + P_1 + '; ' + \
-              'P.sum2:' + P_2 + '; ', loc='left')
-
-    # plt.rcParams["figure.figsize"] = (200,3)
-    plt.savefig(TileName, dpi=100)
+        # plt.rcParams["figure.figsize"] = (200,3)
+        plt.savefig(TileName if not final else "final.png", dpi=100)
 
 def PrintSummary():
     print(stepCount, \
@@ -361,7 +363,6 @@ def PrintSummary():
             pressure.sum1, \
             pressure.sum2)
 
-
 def GraphOutput():
     ax = \
     df_systemParams.plot(x="timestep", y='$\Sigma v$', kind="line")
@@ -371,9 +372,7 @@ def GraphOutput():
     df_systemParams.plot(x="timestep", y='$\sigma Ek$', kind="line", ax=ax, color="C4")
     df_systemParams.plot(x="timestep", y='P_1', kind="line", ax=ax, color="C9")
     df_systemParams.plot(x="timestep", y='P_2', kind="line", ax=ax, color="C9")
-
-    plt.savefig('plot.jpg', dpi=300)
-
+    plt.savefig('report.jpg', dpi=300)
 
 # HANDLING FUNCTION (SingleStep())
 '''
@@ -401,13 +400,19 @@ def SingleStep():
         systemParams.append(PrintSummary())
         AccumProps(0)  # Set to zero all the properties.
 
+# 2D SOFT-DISK SIMULATION: THE MAIN LOOP
 if __name__ == '__main__':
-    # 2D SOFT-DISK SIMULATION: THE MAIN LOOP
-    # Set a working directory for all the png and videos
+    from argparse import ArgumentParser
+    parser = ArgumentParser(description='2D Soft-Disk Simulation(Python Ver.)')
+    parser.add_argument("-f", "--file", help="Output step file", default=False, action='store_true')
+    parser.add_argument("-g", "--graph", help="Output step graph", default=False, action='store_true')
+    args = parser.parse_args()
+
     import time
     start = time.time()
 
     workdir = str(os.getcwd() + '/')
+
     # If the /coo directory doesn't exist make it, else remove /coo (and its contents) and create a new /coo directory.
     if not path.exists(str(workdir + 'coo')):
         os.makedirs(str(workdir + 'coo'))
@@ -463,7 +468,6 @@ if __name__ == '__main__':
     SetupJob()
     moreCycles = 1
 
-
     time_end = time.time()
     print('Setup Time:', time_end - start)
     time_loop_start = time.time()
@@ -471,10 +475,11 @@ if __name__ == '__main__':
     n = 0
     while moreCycles:
         SingleStep()
-        plotMolCoo(mol, workdir, n)  # Make a graph of the coordinates
+        plotMolCoo(mol, workdir, n, stepCount == stepLimit - 1, args.file, args.graph)  # Make a graph of the coordinates
         n += 1
         if stepCount >= stepLimit:
             moreCycles = 0
+
     time_loop_end = time.time()
     print('Logic Run Time:', time_loop_end - time_loop_start)
 
