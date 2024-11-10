@@ -9,9 +9,7 @@ const long IADD = 453806245;
 const long MASK = 2147483647;
 const double SCALE = 0.4656612873e-9;
 static long randSeedP = 17;
-constexpr size_t INIT_UCELL_X = 20;
-constexpr size_t INIT_UCELL_Y = 20;
-constexpr size_t N_MOL = INIT_UCELL_X * INIT_UCELL_Y;  // 400
+constexpr size_t N_MOLECULES = 400;
 const int NDIM = 2;          // 2D simulation
 
 // 2. class
@@ -21,7 +19,7 @@ class Prop;
 // 3. global variable
 double region[2];
 size_t nMol;
-double initUcell[2] = {INIT_UCELL_X, INIT_UCELL_Y};
+double initUcell[2];
 double velMag;  // velocity magnitude
 double vSum[2] = {0.0, 0.0};  // sum of velocities
 double virSum;     // virial sum
@@ -36,6 +34,7 @@ double timeNow;
 size_t stepAvg;   // steps between averaging property measurements
 // Add to global variables
 size_t stepCount;    // timestep counter
+
 
 // 4. class
 class Mol {
@@ -73,7 +72,7 @@ void PropAccum(Prop &v);
 void PropAvg(Prop &v, int n);
 
 // 5.global class
-Mol mol[N_MOL];
+Mol mol[N_MOLECULES];
 Prop kinEnergy;     // kinetic energy
 Prop totEnergy;     // total energy
 Prop pressure;      // pressure
@@ -178,7 +177,7 @@ void SetParams() {
     region[1] = initUcell[1] / sqrt( density);
     
     // Set number of molecules
-    nMol = N_MOL;
+    nMol = N_MOLECULES;
     
     // Calculate velocity magnitude based on temperature
     velMag = sqrt(NDIM * (1.0 - 1.0/nMol) * temperature);
@@ -326,41 +325,41 @@ void PrintSummary() {
            pressure.sum2);        // pressure standard deviation
 }
 
-void outputMolCoo(const char* filename, size_t mark_1, size_t mark_2) {
-    FILE* f = fopen(filename, "w");
-    if (!f) {
-        printf("Error opening file: %s\n", filename);
-        return;
-    }
+// void outputMolCoo(const char* filename, size_t mark_1, size_t mark_2) {
+//     FILE* f = fopen(filename, "w");
+//     if (!f) {
+//         printf("Error opening file: %s\n", filename);
+//         return;
+//     }
 
-    // Write header
-    fprintf(f, "step: %zu\n", stepCount);
-    fprintf(f, "ts: %.4f\n", timeNow);
-    fprintf(f, "Sigma v: %.4f\n", vSum[0] / nMol);
-    fprintf(f, "E: %.4f\n", totEnergy.sum1);
-    fprintf(f, "Sigma E: %.4f\n", totEnergy.sum2);
-    fprintf(f, "Ek: %.4f\n", kinEnergy.sum1);
-    fprintf(f, "Sigma Ek: %.4f\n", kinEnergy.sum2);
-    fprintf(f, "P_1: %.4f\n", pressure.sum1);
-    fprintf(f, "P_2: %.4f\n", pressure.sum2);
-    fprintf(f, "====================\n");
+//     // Write header
+//     fprintf(f, "step: %zu\n", stepCount);
+//     fprintf(f, "ts: %.4f\n", timeNow);
+//     fprintf(f, "Sigma v: %.4f\n", vSum[0] / nMol);
+//     fprintf(f, "E: %.4f\n", totEnergy.sum1);
+//     fprintf(f, "Sigma E: %.4f\n", totEnergy.sum2);
+//     fprintf(f, "Ek: %.4f\n", kinEnergy.sum1);
+//     fprintf(f, "Sigma Ek: %.4f\n", kinEnergy.sum2);
+//     fprintf(f, "P_1: %.4f\n", pressure.sum1);
+//     fprintf(f, "P_2: %.4f\n", pressure.sum2);
+//     fprintf(f, "====================\n");
 
-    // Write molecule coordinates
-    for (size_t n = 0; n < nMol; n++) {
-        if (n == mark_1) {
-            fprintf(f, "m-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
-        }
-        else if (n == mark_2) {
-            fprintf(f, "m-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
-        }
-        else {
-            fprintf(f, "o-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
-        }
-    }
-    fprintf(f, "====================");
+//     // Write molecule coordinates
+//     for (size_t n = 0; n < nMol; n++) {
+//         if (n == mark_1) {
+//             fprintf(f, "m-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
+//         }
+//         else if (n == mark_2) {
+//             fprintf(f, "m-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
+//         }
+//         else {
+//             fprintf(f, "o-%zu:%.4f,%.4f\n", n, mol[n].r[0], mol[n].r[1]);
+//         }
+//     }
+//     fprintf(f, "====================");
 
-    fclose(f);
-}
+//     fclose(f);
+// }
 void SingleStep() {
     stepCount++;
     timeNow = stepCount * deltaT;
@@ -380,7 +379,7 @@ void SingleStep() {
         sprintf(filename, "coo/%zu.out", stepCount);
         size_t mark_1 = nMol / 2 + nMol / 8;
         size_t mark_2 = mark_1 + 1;
-        outputMolCoo(filename, mark_1, mark_2);
+        // outputMolCoo(filename, mark_1, mark_2);
         
         AccumProps(0);
     }
