@@ -80,11 +80,6 @@ def InitCoords():
     n = 0
     for ny in range(0, int(initUcell[1])):
         for nx in range(0, int(initUcell[0])):
-            # c = np.asarray([nx+0.5, ny+0.5])
-            # c = np.multiply(c, gap)
-            # c = np.add(c, np.multiply(-0.5, region))
-            # mol[n].r = c
-
             mol[n].r = np.add(np.multiply(np.asarray([nx + 0.5, ny + 0.5]), gap), np.multiply(-0.5, region))
             n = n + 1
 
@@ -299,48 +294,48 @@ def outputMolCoo(x, workdir, n, mark_1, mark_2, final):
                 f.write(f'o-{n}:' + str(x[n].r[0]) + ',' + str(x[n].r[1]) + '\n')
         f.write('====================')
 
-def plotMolCoo(mol, workdir, n, final, file=True, graph=False):
-    if not graph and not file and not final:
-        return
+# def plotMolCoo(mol, workdir, n, final, file=True, graph=False):
+#     if not graph and not file and not final:
+#         return
 
-    x = []
-    y = []
-    for m in range(len(mol)):
-        x.append(mol[m].r[0])
-        y.append(mol[m].r[1])
+#     x = []
+#     y = []
+#     for m in range(len(mol)):
+#         x.append(mol[m].r[0])
+#         y.append(mol[m].r[1])
 
-    mark_1 = int(len(mol) / 2 + len(mol) / 8)
-    mark_2 = int(len(mol) / 2 + len(mol) / 8 + 1)
+#     mark_1 = int(len(mol) / 2 + len(mol) / 8)
+#     mark_2 = int(len(mol) / 2 + len(mol) / 8 + 1)
 
-    if file or final:
-        outputMolCoo(mol, workdir, n, mark_1, mark_2, final)
-    if graph or final:
-        import matplotlib.pyplot as plt
-        Time = timeNow
-        Sigma_v = "{0:.4f}".format(vSum[0] / nMol)
-        E = "{0:.4f}".format(totEnergy.sum1)
-        Sigma_E = "{0:.4f}".format(totEnergy.sum2)
-        Ek = "{0:.4f}".format(kinEnergy.sum1)
-        Sigma_Ek = "{0:.4f}".format(kinEnergy.sum2)
-        P_1 = "{0:.4f}".format(pressure.sum1)
-        P_2 = "{0:.4f}".format(pressure.sum2)
-        TileName = (workdir + 'coo/' + str(n) + '.png')
+#     if file or final:
+#         outputMolCoo(mol, workdir, n, mark_1, mark_2, final)
+#     if graph or final:
+#         import matplotlib.pyplot as plt
+#         Time = timeNow
+#         Sigma_v = "{0:.4f}".format(vSum[0] / nMol)
+#         E = "{0:.4f}".format(totEnergy.sum1)
+#         Sigma_E = "{0:.4f}".format(totEnergy.sum2)
+#         Ek = "{0:.4f}".format(kinEnergy.sum1)
+#         Sigma_Ek = "{0:.4f}".format(kinEnergy.sum2)
+#         P_1 = "{0:.4f}".format(pressure.sum1)
+#         P_2 = "{0:.4f}".format(pressure.sum2)
+#         TileName = (workdir + 'coo/' + str(n) + '.png')
 
-        plt.plot(x, y, 'o', color='blue')
-        plt.plot(x[mark_1], y[mark_1], 'o', color='red')
-        plt.plot(x[mark_2], y[mark_2], 'o', color='cyan')
+#         plt.plot(x, y, 'o', color='blue')
+#         plt.plot(x[mark_1], y[mark_1], 'o', color='red')
+#         plt.plot(x[mark_2], y[mark_2], 'o', color='cyan')
 
-        plt.title('timestep:' + "{0:.4f}".format(Time) + '; ' + \
-                  '$\Sigma v$:' + Sigma_v + '; ' + \
-                  'E:' + E + '; ' + \
-                  '$\sigma E$:' + Sigma_E + ';\n' + \
-                  'Ek:' + Ek + '; ' + \
-                  '$\sigma Ek$:' + Sigma_Ek + '; ' + \
-                  'P.sum1:' + P_1 + '; ' + \
-                  'P.sum2:' + P_2 + '; ', loc='left')
+#         plt.title('timestep:' + "{0:.4f}".format(Time) + '; ' + \
+#                   '$\Sigma v$:' + Sigma_v + '; ' + \
+#                   'E:' + E + '; ' + \
+#                   '$\sigma E$:' + Sigma_E + ';\n' + \
+#                   'Ek:' + Ek + '; ' + \
+#                   '$\sigma Ek$:' + Sigma_Ek + '; ' + \
+#                   'P.sum1:' + P_1 + '; ' + \
+#                   'P.sum2:' + P_2 + '; ', loc='left')
 
-        # plt.rcParams["figure.figsize"] = (200,3)
-        plt.savefig(TileName if not final else "final.png", dpi=100)
+#         # plt.rcParams["figure.figsize"] = (200,3)
+#         plt.savefig(TileName if not final else "final.png", dpi=100)
 
 def PrintSummary():
     print(stepCount, \
@@ -363,16 +358,16 @@ def PrintSummary():
             pressure.sum1, \
             pressure.sum2)
 
-def GraphOutput():
-    ax = \
-    df_systemParams.plot(x="timestep", y='$\Sigma v$', kind="line")
-    df_systemParams.plot(x="timestep", y='E', kind="line", ax=ax, color="C1")
-    df_systemParams.plot(x="timestep", y='$\sigma E$', kind="line", ax=ax, color="C2")
-    df_systemParams.plot(x="timestep", y='Ek', kind="line", ax=ax, color="C3")
-    df_systemParams.plot(x="timestep", y='$\sigma Ek$', kind="line", ax=ax, color="C4")
-    df_systemParams.plot(x="timestep", y='P_1', kind="line", ax=ax, color="C9")
-    df_systemParams.plot(x="timestep", y='P_2', kind="line", ax=ax, color="C9")
-    plt.savefig('report.jpg', dpi=300)
+# def GraphOutput():
+#     ax = \
+#     df_systemParams.plot(x="timestep", y='$\Sigma v$', kind="line")
+#     df_systemParams.plot(x="timestep", y='E', kind="line", ax=ax, color="C1")
+#     df_systemParams.plot(x="timestep", y='$\sigma E$', kind="line", ax=ax, color="C2")
+#     df_systemParams.plot(x="timestep", y='Ek', kind="line", ax=ax, color="C3")
+#     df_systemParams.plot(x="timestep", y='$\sigma Ek$', kind="line", ax=ax, color="C4")
+#     df_systemParams.plot(x="timestep", y='P_1', kind="line", ax=ax, color="C9")
+#     df_systemParams.plot(x="timestep", y='P_2', kind="line", ax=ax, color="C9")
+#     plt.savefig('report.jpg', dpi=300)
 
 # HANDLING FUNCTION (SingleStep())
 '''
@@ -472,11 +467,11 @@ if __name__ == '__main__':
     print('Setup Time:', time_end - start)
     time_loop_start = time.time()
 
-    n = 0
+    # n = 0
     while moreCycles:
         SingleStep()
-        plotMolCoo(mol, workdir, n, stepCount == stepLimit - 1, args.file, args.graph)  # Make a graph of the coordinates
-        n += 1
+        # plotMolCoo(mol, workdir, n, stepCount == stepLimit - 1, args.file, args.graph)  # Make a graph of the coordinates
+        # n += 1
         if stepCount >= stepLimit:
             moreCycles = 0
 
@@ -486,7 +481,7 @@ if __name__ == '__main__':
     columns = ['timestep', 'timeNow', '$\Sigma v$', 'E', '$\sigma E$', 'Ek', '$\sigma Ek$', 'P_1', 'P_2']
     df_systemParams = pd.DataFrame(systemParams, columns=columns)
 
-    GraphOutput()
+    # GraphOutput()
 
     time_end = time.time()
     print('Total Time:', time_end - start)
