@@ -1,7 +1,9 @@
 *.jpg
 *.out
 *.png
+m.in
 coo/
 .idea/
 .vscode/
 .venv/
+final*

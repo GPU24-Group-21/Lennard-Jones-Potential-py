@@ -1,7 +1,7 @@
-import pandas as pd
 import math
+
 import matplotlib.pyplot as plt
-from dateutil.parser import parser
+import pandas as pd
 
 plt.style.use('seaborn-v0_8-bright')
 import numpy as np
@@ -128,6 +128,22 @@ def SetParams():
     velMag = math.sqrt(NDIM * (1. - 1. / nMol) * temperature)
 
 
+def outputMolIn():
+    with open("m.in", 'w') as f:
+        f.write('rCut ' + str(rCut) + '\n')
+        f.write('region ' + str(region[0]) + ' ' + str(region[1]) + '\n')
+        f.write('velMag ' + str(velMag) + '\n')
+        for i in range(nMol):
+            f.write(
+                str(mol[i].r[0]) + ' ' +
+                str(mol[i].r[1]) + ' ' +
+                str(mol[i].rv[0]) + ' ' +
+                str(mol[i].rv[1]) + ' ' +
+                str(mol[i].ra[0]) + ' ' +
+                str(mol[i].ra[1]) + '\n'
+            )
+
+
 # Setup Job
 def SetupJob():
     global stepCount  # timestep counter
@@ -135,6 +151,7 @@ def SetupJob():
     InitCoords()
     InitVels()
     InitAccels()
+    outputMolIn()
     AccumProps(0)
 
 
@@ -150,6 +167,8 @@ As r increases towards rCut, the force drops to 0.
 Newton's third law inplies that fji = -fij, so each atom pair need only be examined once.
 The amount of work is proportional to N^2.
 '''
+
+
 def ComputeForces():
     global virSum
     global uSum
@@ -173,7 +192,7 @@ def ComputeForces():
             r = np.sqrt(rr)  # dr
 
             # if dr2 < Rc^2
-            if (rr < rrCut):
+            if rr < rrCut:
                 rri = sigma / rr
                 rri3 = Cube(rri)
 
@@ -209,6 +228,8 @@ vix(t + h/2) = vix(t) + (h/2)aix(t)
 rix(t + h) = rix(t) + hvix (t + h/2)
 
 '''
+
+
 def LeapfrogStep(part):
     if part == 1:
         for n in range(nMol):
@@ -273,6 +294,7 @@ def AccumProps(icode):
         PropAvg(kinEnergy, stepAvg)
         PropAvg(pressure, stepAvg)
 
+
 # OUTPUT FUNCTIONS:
 def outputMolCoo(x, workdir, n, mark_1, mark_2, final):
     filename = (workdir + 'coo/' + str(n) + '.out')
@@ -281,23 +303,18 @@ def outputMolCoo(x, workdir, n, mark_1, mark_2, final):
         # header
         f.write('step: ' + str(n) + '\n')
         f.write('ts: ' + str(timeNow) + '\n')
-        f.write('Sigma v: ' + str(vSum[0] / nMol) + '\n')
-        f.write('E: ' + str(totEnergy.sum1) + '\n')
-        f.write('Sigma E: ' + str(totEnergy.sum2) + '\n')
-        f.write('Ek: ' + str(kinEnergy.sum1) + '\n')
-        f.write('Sigma Ek: ' + str(kinEnergy.sum2) + '\n')
-        f.write('P_1: ' + str(pressure.sum1) + '\n')
-        f.write('P_2: ' + str(pressure.sum2) + '\n')
+        f.write('vSum0: ' + str(vSum[0] / nMol) + '\n')
+        f.write('vSum1: ' + str(vSum[1] / nMol) + '\n')
         f.write('====================\n')
         # body
         for n in range(len(x)):
             if n == mark_1:
-                f.write(f'm-{n}:' + str(x[n].r[0]) + ',' + str(x[n].r[1]) + '\n')
+                f.write(f'm-{n} ' + str(x[n].r[0]) + ' ' + str(x[n].r[1]) + '\n')
             elif n == mark_2:
-                f.write(f'm-{n}:' + str(x[n].r[0]) + ',' + str(x[n].r[1]) + '\n')
+                f.write(f'm-{n} ' + str(x[n].r[0]) + ' ' + str(x[n].r[1]) + '\n')
             else:
-                f.write(f'o-{n}:' + str(x[n].r[0]) + ',' + str(x[n].r[1]) + '\n')
-        f.write('====================')
+                f.write(f'o-{n} ' + str(x[n].r[0]) + ' ' + str(x[n].r[1]) + '\n')
+
 
 def plotMolCoo(mol, workdir, n, final, file=True, graph=False):
     if not graph and not file and not final:
@@ -342,6 +359,7 @@ def plotMolCoo(mol, workdir, n, final, file=True, graph=False):
         # plt.rcParams["figure.figsize"] = (200,3)
         plt.savefig(TileName if not final else "final.png", dpi=100)
 
+
 def PrintSummary():
     print(stepCount, \
           "{0:.4f}".format(timeNow), \
@@ -363,9 +381,10 @@ def PrintSummary():
             pressure.sum1, \
             pressure.sum2)
 
+
 def GraphOutput():
     ax = \
-    df_systemParams.plot(x="timestep", y='$\Sigma v$', kind="line")
+        df_systemParams.plot(x="timestep", y='$\Sigma v$', kind="line")
     df_systemParams.plot(x="timestep", y='E', kind="line", ax=ax, color="C1")
     df_systemParams.plot(x="timestep", y='$\sigma E$', kind="line", ax=ax, color="C2")
     df_systemParams.plot(x="timestep", y='Ek', kind="line", ax=ax, color="C3")
@@ -373,6 +392,7 @@ def GraphOutput():
     df_systemParams.plot(x="timestep", y='P_1', kind="line", ax=ax, color="C9")
     df_systemParams.plot(x="timestep", y='P_2', kind="line", ax=ax, color="C9")
     plt.savefig('report.jpg', dpi=300)
+
 
 # HANDLING FUNCTION (SingleStep())
 '''
@@ -382,6 +402,8 @@ SingleStep: Is the function that handles the processing for a single timestep, i
 3) adjustments required by periodic boundaries, and
 4) property measurements
 '''
+
+
 def SingleStep():
     global stepCount  # timestep counter
     global timeNow
@@ -400,17 +422,19 @@ def SingleStep():
         systemParams.append(PrintSummary())
         AccumProps(0)  # Set to zero all the properties.
 
+
 # 2D SOFT-DISK SIMULATION: THE MAIN LOOP
 if __name__ == '__main__':
     from argparse import ArgumentParser
+    import time
+
+    start = time.time()
+
     parser = ArgumentParser(description='2D Soft-Disk Simulation(Python Ver.)')
+    parser.add_argument("-q", "--quite", help="Disable print", default=False, action='store_true')
     parser.add_argument("-f", "--file", help="Output step file", default=False, action='store_true')
     parser.add_argument("-g", "--graph", help="Output step graph", default=False, action='store_true')
     args = parser.parse_args()
-
-    import time
-    start = time.time()
-
     workdir = str(os.getcwd() + '/')
 
     # If the /coo directory doesn't exist make it, else remove /coo (and its contents) and create a new /coo directory.
@@ -425,8 +449,8 @@ if __name__ == '__main__':
 
     NDIM = 2  # Two-Dimension setting
     vSum = np.asarray([0.0, 0.0])  # velocity sum
-    kinEnergy = Prop(0.0, 0.0, 0.0) # Ek (and average)
-    totEnergy = Prop(0.0, 0.0, 0.0) # E  (and average)
+    kinEnergy = Prop(0.0, 0.0, 0.0)  # Ek (and average)
+    totEnergy = Prop(0.0, 0.0, 0.0)  # E  (and average)
     pressure = Prop(0.0, 0.0, 0.0)  # P  (and average)
 
     systemParams = []
@@ -468,25 +492,17 @@ if __name__ == '__main__':
     SetupJob()
     moreCycles = 1
 
-    time_end = time.time()
-    print('Setup Time:', time_end - start)
-    time_loop_start = time.time()
-
     n = 0
     while moreCycles:
         SingleStep()
-        plotMolCoo(mol, workdir, n, stepCount == stepLimit - 1, args.file, args.graph)  # Make a graph of the coordinates
+        # Make a graph of the coordinates
+        plotMolCoo(mol, workdir, n, stepCount == stepLimit - 1, args.file, args.graph)
         n += 1
         if stepCount >= stepLimit:
             moreCycles = 0
 
-    time_loop_end = time.time()
-    print('Logic Run Time:', time_loop_end - time_loop_start)
-
     columns = ['timestep', 'timeNow', '$\Sigma v$', 'E', '$\sigma E$', 'Ek', '$\sigma Ek$', 'P_1', 'P_2']
     df_systemParams = pd.DataFrame(systemParams, columns=columns)
-
     GraphOutput()
-
     time_end = time.time()
-    print('Total Time:', time_end - start)
+    print('[Total Time]:', time_end - start)

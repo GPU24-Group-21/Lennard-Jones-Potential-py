@@ -5,4 +5,4 @@ initUcell_y	20
 stepAvg	100
 stepEquil	0
 stepLimit	500
-temperature	1.
+temperature	1.0
