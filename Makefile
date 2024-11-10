@@ -1,8 +1,10 @@
 setup:
+	@chmod +x ./setup.sh
 	./setup.sh
 
 run:
-	python main.py
+	@chmod +x ./run.sh
+	./run.sh
 
 clean:
 	rm -rf ./coo *.jpg *.out *.png
