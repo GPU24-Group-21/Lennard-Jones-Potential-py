@@ -3,7 +3,7 @@
 #include <cstdlib>  
 #include <chrono>   
 
-// 1. 首先定义常量
+// 1. constant
 const long IMUL = 314159269;
 const long IADD = 453806245;
 const long MASK = 2147483647;
@@ -14,11 +14,11 @@ constexpr size_t INIT_UCELL_Y = 20;
 constexpr size_t N_MOL = INIT_UCELL_X * INIT_UCELL_Y;  // 400
 const int NDIM = 2;          // 2D simulation
 
-// 2. 前向声明类
+// 2. class
 class Mol;
 class Prop;
 
-// 3. 声明全局变量
+// 3. global variable
 double region[2];
 size_t nMol;
 double initUcell[2] = {INIT_UCELL_X, INIT_UCELL_Y};
@@ -37,7 +37,7 @@ size_t stepAvg;   // steps between averaging property measurements
 // Add to global variables
 size_t stepCount;    // timestep counter
 
-// 4. 定义类
+// 4. class
 class Mol {
 public:
     double r[2];    // location
@@ -72,14 +72,13 @@ void PropZero(Prop &v);
 void PropAccum(Prop &v);
 void PropAvg(Prop &v, int n);
 
-// 5. 定义全局对象
+// 5.global class
 Mol mol[N_MOL];
 Prop kinEnergy;     // kinetic energy
 Prop totEnergy;     // total energy
 Prop pressure;      // pressure
 
-// 6. 函数声明和定义
-// ... [rest of your functions remain the same]
+
 
 inline double Sqr(double x) {
     return x * x;
@@ -394,37 +393,35 @@ int main() {
         return 1;
     }
     
-    // 读取参数
+
     fscanf(infile, "%*s %lf", &deltaT);        // timestep
     fscanf(infile, "%*s %lf", &density);       // density
     fscanf(infile, "%*s %lf", &initUcell[0]);  // initUcell x
     fscanf(infile, "%*s %lf", &initUcell[1]);  // initUcell y
     fscanf(infile, "%*s %zu", &stepAvg);       // step average
-    double stepEquil;  // 平衡步数
+    double stepEquil; 
     fscanf(infile, "%*s %lf", &stepEquil);
-    double stepLimit;  // 总步数
+    double stepLimit;  
     fscanf(infile, "%*s %lf", &stepLimit);
     fscanf(infile, "%*s %lf", &temperature);   // temperature
     fclose(infile);
 
-    printf("steplimit:%.1f\n", stepLimit);  // 修正格式说明符
+    printf("steplimit:%.1f\n", stepLimit); 
 
-    // 2. 创建输出目录
-    system("mkdir -p coo");  // 创建输出目录(如果不存在)
-    system("rm -rf coo/*");  // 清空目录(如果存在)
-    
+    system("mkdir -p coo");  
+    system("rm -rf coo/*");  
     clock_t start = clock();
     
-    // 3. 初始化系统
+  
     SetParams();
     SetupJob();
     
-    // 4. 主循环
+
     printf("Started MD simulation...\n");
     printf("stepCount timeNow vSum/nMol totE totEsd kinE kinEsd P Psd\n");
     
     bool moreCycles = true;
-    // 删除这行: size_t stepCount = 0; // 不要重新定义stepCount
+ 
     
     clock_t time_loop_start = clock();
     
@@ -438,7 +435,7 @@ int main() {
     
     clock_t time_loop_end = clock();
     
-    // 5. 输出运行时间信息
+    // 5. 
     double setup_time = (double)(time_loop_start - start) / CLOCKS_PER_SEC;
     double loop_time = (double)(time_loop_end - time_loop_start) / CLOCKS_PER_SEC;
     double total_time = (double)(time_loop_end - start) / CLOCKS_PER_SEC;
